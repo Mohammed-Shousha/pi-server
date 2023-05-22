@@ -4,13 +4,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 import motor.motor_asyncio
 from bson import ObjectId
-from models import MedicineModel, PrescriptionModel, PrescriptionMedicineModel
+from models import (
+    MedicineModel,
+    PrescriptionModel,
+    PrescriptionMedicineModel,
+)
 from utils import (
     separate_medicines,
     update_medicines,
     update_prescription,
     create_prescription_with_unavailable_medicines,
 )
+from gpio import get_medicine, servo_shelf
 
 app = FastAPI()
 
@@ -28,21 +33,33 @@ async def read_root():
 
 @app.get("/medicines", response_model=list[MedicineModel])
 async def list_medicines():
-    medicines = await db["medicines"].find().to_list(length=1000)
+    medicines = (
+        await db["medicines"]
+        .find({"availableQuantity": {"$gte": 1}})
+        .to_list(length=1000)
+    )
 
     return medicines
 
 
 @app.get("/otc-medicines", response_model=list[MedicineModel])
 async def list_otc_medicines():
-    medicines = await db["medicines"].find({"otc": True}).to_list(length=1000)
+    medicines = (
+        await db["medicines"]
+        .find({"otc": True, "availableQuantity": {"$gte": 1}})
+        .to_list(length=1000)
+    )
 
     return medicines
 
 
 @app.get("/medicines/{id}", response_model=MedicineModel)
 async def show_medicine(id: str):
-    if (medicine := await db["medicines"].find_one({"_id": ObjectId(id)})) is not None:
+    if (
+        medicine := await db["medicines"].find_one(
+            {"_id": ObjectId(id)},
+        )
+    ) is not None:
         return medicine
 
     raise HTTPException(
@@ -61,11 +78,16 @@ async def list_prescriptions():
 @app.get("/prescriptions/{id}", response_model=PrescriptionModel)
 async def show_prescription(id: str):
     if (
-        prescription := await db["prescriptions"].find_one({"_id": ObjectId(id)})
+        prescription := await db["prescriptions"].find_one(
+            {"_id": ObjectId(id)},
+        )
     ) is not None:
         return prescription
 
-    raise HTTPException(status_code=404, detail=f"Prescription with id: {id} not found")
+    raise HTTPException(
+        status_code=404,
+        detail=f"Prescription with id: {id} not found",
+    )
 
 
 @app.post(
@@ -74,21 +96,21 @@ async def show_prescription(id: str):
 async def verify_prescription_medicines_availability(prescription_id: str):
     if (
         prescription := await db["prescriptions"].find_one(
-            {"_id": ObjectId(prescription_id)}
+            {"_id": ObjectId(prescription_id)},
         )
     ) is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Prescription with id: {prescription_id} not found",
+            detail="Prescription not found",
         )
 
-    if prescription["isPaid"] == False:
+    if prescription["isPaid"] is False:
         raise HTTPException(
             status_code=402,
-            detail="Prescription is not paid",
+            detail="Prescription not paid, you can pay from the mobile app",
         )
 
-    if prescription["isRecived"] == True:
+    if prescription["isReceived"] is True:
         raise HTTPException(
             status_code=400,
             detail="Prescription is already recived",
@@ -101,6 +123,12 @@ async def verify_prescription_medicines_availability(prescription_id: str):
     available_medicines, unavailable_medicines = separate_medicines(
         prescription_medicines, medicines
     )
+
+    if len(available_medicines) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Medicines are not available",
+        )
 
     return {
         "available_medicines": available_medicines,
@@ -126,13 +154,19 @@ async def process_prescription(
             db, prescription_id, unavailable_medicines
         )
 
-    # TODO: get availableMedicines using GPIO
+    # getting availableMedicines using GPIO
+    for medicine in available_medicines:
+        received = get_medicine(medicine["position"])
 
     await update_medicines(db, available_medicines)
 
     await update_prescription(db, prescription_id)
 
-    received = True  # TODO: get received using GPIO
+    if received is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not get medicines",
+        )
 
     return {
         "received": received,
@@ -144,18 +178,46 @@ async def process_prescription(
 async def order_medicines(medicines: list[PrescriptionMedicineModel]):
     medicines = jsonable_encoder(medicines)
 
-    db_medicines = await db["medicines"].find().to_list(length=1000)
+    received = False
 
-    available_medicines, unavailable_medicines = separate_medicines(
-        medicines, db_medicines
-    )
+    for medicine in medicines:
+        received = get_medicine(medicine["position"])
 
-    if len(unavailable_medicines) > 0:
+    if received is False:
         raise HTTPException(
             status_code=400,
-            detail="Medicines are not available",
+            detail="Could not get medicines",
         )
 
-    await update_medicines(db, available_medicines)
+    await update_medicines(db, medicines)
 
-    return {"message": "Medicines ordered successfully"}
+    return received
+
+
+@app.post("/shelf-action/{action}")
+async def open_shelf(position: dict[str, int], action: str):
+    row, col = position.values()
+
+    print(f"row: {row}, col: {col}, action: {action}")
+
+    result = False
+
+    if action == "open":
+        print("open")
+        result = servo_shelf(position, open_shelf=True)
+    elif action == "close":
+        print("close")
+        result = servo_shelf(position, open_shelf=False)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid action specified",
+        )
+
+    if result is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not perform shelf action",
+        )
+
+    return result
