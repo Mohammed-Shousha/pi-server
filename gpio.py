@@ -32,6 +32,8 @@ def get_medicine(position):
     step_backward(DEGREES * row)
     sleep(1)
 
+    return True
+
 
 def servo_shelf(position, open_shelf=False):
     row, col = position.values()
