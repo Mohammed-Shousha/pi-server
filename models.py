@@ -50,7 +50,7 @@ class PrescriptionModel(BaseModel):
     doctorId: PyObjectId = Field(default_factory=PyObjectId)
     date: datetime = Field(...)
     isPaid: bool = Field(...)
-    isRecived: bool = Field(...)
+    isReceived: bool = Field(...)
     medicines: list[PrescriptionMedicineModel] = Field(...)
 
     class Config:

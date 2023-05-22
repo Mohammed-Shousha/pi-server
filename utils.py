@@ -23,7 +23,7 @@ async def update_medicines(db, medicines: list[PrescriptionMedicineModel]):
 
 async def update_prescription(db, prescription_id: str):
     update_result = await db["prescriptions"].update_one(
-        {"_id": ObjectId(prescription_id)}, {"$set": {"isRecived": True}}
+        {"_id": ObjectId(prescription_id)}, {"$set": {"isReceived": True}}
     )
 
     if update_result.modified_count != 1:
@@ -65,7 +65,7 @@ async def create_prescription_with_unavailable_medicines(
 
     prescription["_id"] = ObjectId()
     prescription["date"] = datetime.now()
-    prescription["isRecived"] = False
+    prescription["isReceived"] = False
     prescription["medicines"] = unavailable_medicines
 
     new_prescription = await db["prescriptions"].insert_one(prescription)
