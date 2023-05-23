@@ -16,18 +16,25 @@ DEGREES = 180
 servos = [servo1, servo2]
 
 
-def get_medicine(position):
+def get_medicine(position, quantity):
     row, col = position.values()
-    print(f"row: {row}, col: {col}")
-
-    servo1.min()
-    sleep(1)
+    print(f"row: {row}, col: {col}, qty: {quantity}")
 
     step_forward(DEGREES * row)
     sleep(1)
+    
+    for _ in range(quantity):
+        servo1.min()
+        sleep(1)
 
-    servo1.max()
-    sleep(1)
+        servo1.max()
+        sleep(1)
+    
+    # open the other servo to drop medicines
+    # servo2.min()
+    # sleep(1)
+    # servo2.max()
+    # sleep(1)
 
     step_backward(DEGREES * row)
     sleep(1)

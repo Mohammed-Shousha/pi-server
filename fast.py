@@ -156,7 +156,7 @@ async def process_prescription(
 
     # getting availableMedicines using GPIO
     for medicine in available_medicines:
-        received = get_medicine(medicine["position"])
+        received = get_medicine(medicine["position"], medicine["quantity"])
 
     await update_medicines(db, available_medicines)
 
@@ -181,7 +181,7 @@ async def order_medicines(medicines: list[PrescriptionMedicineModel]):
     received = False
 
     for medicine in medicines:
-        received = get_medicine(medicine["position"])
+        received = get_medicine(medicine["position"], medicine["quantity"])
 
     if received is False:
         raise HTTPException(
