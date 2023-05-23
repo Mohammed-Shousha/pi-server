@@ -154,13 +154,15 @@ async def process_prescription(
             db, prescription_id, unavailable_medicines
         )
 
+    if created is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not create prescription",
+        )
+    
     # getting availableMedicines using GPIO
     for medicine in available_medicines:
         received = get_medicine(medicine["position"], medicine["quantity"])
-
-    await update_medicines(db, available_medicines)
-
-    await update_prescription(db, prescription_id)
 
     if received is False:
         raise HTTPException(
@@ -168,10 +170,13 @@ async def process_prescription(
             detail="Could not get medicines",
         )
 
-    return {
-        "received": received,
-        "created": created,
-    }
+    
+
+    await update_medicines(db, available_medicines)
+
+    await update_prescription(db, prescription_id)
+
+    return True
 
 
 @app.post("/order-medicines")
@@ -191,7 +196,7 @@ async def order_medicines(medicines: list[PrescriptionMedicineModel]):
 
     await update_medicines(db, medicines)
 
-    return received
+    return True
 
 
 @app.post("/shelf-action/{action}")
@@ -220,4 +225,4 @@ async def open_shelf(position: dict[str, int], action: str):
             detail="Could not perform shelf action",
         )
 
-    return result
+    return True
