@@ -47,9 +47,9 @@ def step(angle=ONE_REV_DEG, backward=False):
     stop()
 
 
-def step_forward(steps):
-    step(steps)
+def step_forward(angle):
+    step(angle)
 
 
-def step_backward(steps):
-    step(steps, True)
+def step_backward(angle):
+    step(angle, True)
