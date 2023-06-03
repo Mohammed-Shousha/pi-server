@@ -7,22 +7,7 @@ factory = PiGPIOFactory()
 # Set the pin factory for gpiozero to use the PiGPIOFactory object
 Device.pin_factory = factory
 
-# TODO: specify the initial angle of the servo
-servo1 = AngularServo(23, min_angle=-90, max_angle=90)
-servo2 = AngularServo(4, min_angle=-90, max_angle=90)
-
-
-def min_servo():
-    servo1.min()
-
-
-def max_servo():
-    servo1.max()
-
-
-def mid_servo():
-    servo1.mid()
-
-
-def servo_angle(angle):
-    servo1.angle = angle
+# TODO: specify the initial angle of the servos
+eff_servo = AngularServo(25, min_angle=-90, max_angle=90)
+efb_servo = AngularServo(22, min_angle=-90, max_angle=90)
+shelf_servo = AngularServo(22, min_angle=-90, max_angle=90)
