@@ -1,5 +1,5 @@
-from servo import servo1, servo2
-from stepper import step_forward, step_backward
+from servo import eff_servo, efb_servo, shelf_servo
+from new_stepper import stepper_x_cw, stepper_x_ccw, stepper_y_cw, stepper_y_ccw
 from time import sleep
 
 # project flow:
@@ -11,53 +11,51 @@ from time import sleep
 # move back x-axis stepper
 # move back servo
 
-DEGREES = 180
-
-servos = [servo1, servo2]
-
+X_STEPS = 180
+Y_STEPS = 180
 
 def get_medicine(position, quantity):
     row, col = position.values()
     print(f"row: {row}, col: {col}, qty: {quantity}")
 
-    step_forward(DEGREES * row)
+    stepper_x_cw(X_STEPS * row)
     sleep(1)
-    
+
+    stepper_y_cw(Y_STEPS * col)
+    sleep(1)
+
     for _ in range(quantity):
-        servo1.min()
+        eff_servo.min()
         sleep(1)
 
-        servo1.max()
+        eff_servo.max()
         sleep(1)
     
-    # open the other servo to drop medicines
-    # servo2.min()
-    # sleep(1)
-    # servo2.max()
-    # sleep(1)
+    stepper_y_ccw(Y_STEPS * col)
+    sleep(1)
 
-    step_backward(DEGREES * row)
+    stepper_x_ccw(X_STEPS * row)
+    sleep(1)
+
+    # open the other servo to drop medicines
+    efb_servo.min()
+    sleep(1)
+    efb_servo.max()
     sleep(1)
 
     return True
 
 
-def servo_shelf(position, open_shelf=False):
+def shelf(position, open_shelf=False):
     row, col = position.values()
     print(f"row: {row}, col: {col}")
 
     # use row to specify the shelf (servo)
-    selected_servo = select_servo(row)
-
-    # TODO: use col to light a LED
+    # use col to light a LED
 
     if open_shelf:
-        selected_servo.max()
+        shelf_servo.max()
     else:
-        selected_servo.min()
+        shelf_servo.min()
 
     return True
-
-
-def select_servo(row):
-    return servos[row]

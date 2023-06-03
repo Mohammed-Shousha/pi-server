@@ -15,7 +15,7 @@ from utils import (
     update_prescription,
     create_prescription_with_unavailable_medicines,
 )
-from gpio import get_medicine, servo_shelf
+from gpio import get_medicine, shelf
 
 app = FastAPI()
 
@@ -200,7 +200,7 @@ async def order_medicines(medicines: list[PrescriptionMedicineModel]):
 
 
 @app.post("/shelf-action/{action}")
-async def open_shelf(position: dict[str, int], action: str):
+async def shelf(position: dict[str, int], action: str):
     row, col = position.values()
 
     print(f"row: {row}, col: {col}, action: {action}")
@@ -209,10 +209,10 @@ async def open_shelf(position: dict[str, int], action: str):
 
     if action == "open":
         print("open")
-        result = servo_shelf(position, open_shelf=True)
+        result = shelf(position, open_shelf=True)
     elif action == "close":
         print("close")
-        result = servo_shelf(position, open_shelf=False)
+        result = shelf(position, open_shelf=False)
     else:
         raise HTTPException(
             status_code=400,
