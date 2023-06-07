@@ -113,7 +113,7 @@ async def verify_prescription_medicines_availability(prescription_id: str):
     if prescription["isReceived"] is True:
         raise HTTPException(
             status_code=400,
-            detail="Prescription is already recived",
+            detail="Prescription is already received",
         )
 
     prescription_medicines = prescription["medicines"]
@@ -153,6 +153,8 @@ async def process_prescription(
         created = await create_prescription_with_unavailable_medicines(
             db, prescription_id, unavailable_medicines
         )
+    else:
+        created = True
 
     if created is False:
         raise HTTPException(
