@@ -9,5 +9,5 @@ Device.pin_factory = factory
 
 # TODO: specify the initial angle of the servos
 eff_servo = AngularServo(25, min_angle=-90, max_angle=90)
-efb_servo = AngularServo(22, min_angle=-90, max_angle=90)
-shelf_servo = AngularServo(22, min_angle=-90, max_angle=90)
+efb_servo = AngularServo(16, min_angle=-90, max_angle=90)
+shelf_servo = AngularServo(26, min_angle=-90, max_angle=90)
