@@ -1,5 +1,5 @@
 from servo import eff_servo, efb_servo, shelf_servo
-from new_stepper import stepper_x_cw, stepper_x_ccw, stepper_y_cw, stepper_y_ccw
+from nema_stepper import stepper_x_cw, stepper_x_ccw, stepper_y_cw, stepper_y_ccw
 from time import sleep
 
 # project flow:

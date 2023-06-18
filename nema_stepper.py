@@ -5,8 +5,8 @@ from enum import Enum
 STEPS_PER_REV = 200  # at 1:1 microstepping
 
 # Define the pins for the TB6600 driver
-PUL_X = DigitalOutputDevice(17)
-DIR_X = DigitalOutputDevice(27)
+PUL_X = DigitalOutputDevice(20)
+DIR_X = DigitalOutputDevice(21)
 
 PUL_Y = DigitalOutputDevice(23)
 DIR_Y = DigitalOutputDevice(24)
@@ -56,3 +56,13 @@ def stepper_y_cw(steps):
 
 def stepper_y_ccw(steps):
     stepper(Axis.Y, steps, Direction.CCW)
+
+
+# def axis_movement(x_steps = 200, y_steps=200):
+#     stepper_x_cw(x_steps)
+#     sleep(1)
+#     stepper_y_cw(y_steps)
+#     sleep(1)
+#     stepper_x_ccw(x_steps)
+#     sleep(1)
+#     stepper_y_ccw(y_steps)
