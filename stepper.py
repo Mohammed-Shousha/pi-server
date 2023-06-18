@@ -2,15 +2,24 @@ from gpiozero import OutputDevice
 from time import sleep
 
 # Define GPIO pins for IN1, IN2, IN3, IN4
-IN1 = OutputDevice(17)
-IN2 = OutputDevice(27)
-IN3 = OutputDevice(22)
-IN4 = OutputDevice(18)
+F_IN1 = OutputDevice(17)
+F_IN2 = OutputDevice(27)
+F_IN3 = OutputDevice(22)
+F_IN4 = OutputDevice(18)
 
-pins = [IN1, IN2, IN3, IN4]
+B_IN1 = OutputDevice(10)
+B_IN2 = OutputDevice(9)
+B_IN3 = OutputDevice(11)
+B_IN4 = OutputDevice(8)
+
+
+f_pins = [F_IN1, F_IN2, F_IN3, F_IN4]
+b_pins = [B_IN1, B_IN2, B_IN3, B_IN4]
+
+
 
 # Define sequence of control signals for stepping motor
-seq = [
+SEQ = [
     [1, 0, 0, 1],
     [1, 0, 0, 0],
     [1, 1, 0, 0],
@@ -24,32 +33,52 @@ seq = [
 STEPS_PER_REV = 512
 ONE_REV_DEG = 360
 
-
-def stop():
-    IN1.value = 0
-    IN2.value = 0
-    IN3.value = 0
-    IN4.value = 0
-
+B_ANGLE = 140 # back angle
+F_ANGLE = 130 # forward angle
 
 # Define function to step motor forward or backward
-def step(angle=ONE_REV_DEG, backward=False):
+def step(pins ,angle=ONE_REV_DEG, backward=False):
     steps = int(angle * STEPS_PER_REV / ONE_REV_DEG)
 
     if backward == True:
-        seq.reverse()
+        SEQ.reverse()
 
     for _ in range(steps):
-        for step in seq:
+        for seq in SEQ:
             for i in range(len(pins)):
-                pins[i].value = step[i]
+                pins[i].value = seq[i]
             sleep(0.001)
-    stop()
+    
+    stop(pins)
 
+def stop(pins):
+    for pin in pins:
+        pin.value = 0
 
-def step_forward(angle):
-    step(angle)
+def step_f_forward(angle):
+    step(f_pins, angle)
 
+def step_f_backward(angle):
+    step(f_pins, angle, True)
 
-def step_backward(angle):
-    step(angle, True)
+def step_b_forward(angle):
+    step(b_pins, angle)
+
+def step_b_backward(angle):
+    step(b_pins, angle, True)
+
+def back_movement():
+    print("back start")
+    step_b_forward(B_ANGLE)
+    sleep(1)
+    step_b_backward(B_ANGLE)
+    sleep(1)
+    print("back end")
+
+def front_movement():
+    print("front start")
+    step_f_forward(F_ANGLE)
+    sleep(1)
+    step_f_backward(F_ANGLE-1)
+    sleep(1)
+    print("front end")
