@@ -9,6 +9,7 @@ from models import (
     PrescriptionModel,
     PrescriptionMedicineModel,
 )
+from relay import close_shelf, open_shelf
 from utils import (
     separate_medicines,
     update_medicines,
@@ -211,10 +212,10 @@ async def shelf(position: dict[str, int], action: str):
 
     if action == "open":
         print("open")
-        result = shelf(position, open_shelf=True)
+        result = open_shelf()
     elif action == "close":
         print("close")
-        result = shelf(position, open_shelf=False)
+        result = close_shelf()
     else:
         raise HTTPException(
             status_code=400,
