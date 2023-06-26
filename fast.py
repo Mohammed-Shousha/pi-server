@@ -9,14 +9,13 @@ from models import (
     PrescriptionModel,
     PrescriptionMedicineModel,
 )
-from relay import close_shelf, open_shelf
 from utils import (
     separate_medicines,
     update_medicines,
     update_prescription,
     create_prescription_with_unavailable_medicines,
 )
-from gpio import get_medicine, shelf
+from gpio import get_medicine, open_shelf, close_shelf
 
 app = FastAPI()
 
@@ -29,11 +28,13 @@ db = client.SAP
 
 @app.get("/")
 async def read_root():
+
     return {"Hello": "World"}
 
 
 @app.get("/medicines", response_model=list[MedicineModel])
 async def list_medicines():
+
     medicines = (
         await db["medicines"]
         .find({"availableQuantity": {"$gte": 1}})
@@ -45,6 +46,7 @@ async def list_medicines():
 
 @app.get("/otc-medicines", response_model=list[MedicineModel])
 async def list_otc_medicines():
+
     medicines = (
         await db["medicines"]
         .find({"otc": True, "availableQuantity": {"$gte": 1}})
@@ -56,6 +58,7 @@ async def list_otc_medicines():
 
 @app.get("/medicines/{id}", response_model=MedicineModel)
 async def show_medicine(id: str):
+
     if (
         medicine := await db["medicines"].find_one(
             {"_id": ObjectId(id)},
@@ -71,6 +74,7 @@ async def show_medicine(id: str):
 
 @app.get("/prescriptions", response_model=list[PrescriptionModel])
 async def list_prescriptions():
+
     prescriptions = await db["prescriptions"].find().to_list(length=1000)
 
     return prescriptions
@@ -78,6 +82,7 @@ async def list_prescriptions():
 
 @app.get("/prescriptions/{id}", response_model=PrescriptionModel)
 async def show_prescription(id: str):
+
     if (
         prescription := await db["prescriptions"].find_one(
             {"_id": ObjectId(id)},
@@ -95,6 +100,7 @@ async def show_prescription(id: str):
     "/verify-prescription-medicines-availability/{prescription_id}",
 )
 async def verify_prescription_medicines_availability(prescription_id: str):
+
     if (
         prescription := await db["prescriptions"].find_one(
             {"_id": ObjectId(prescription_id)},
@@ -143,6 +149,7 @@ async def process_prescription(
     available_medicines: list[PrescriptionMedicineModel],
     unavailable_medicines: list[PrescriptionMedicineModel],
 ):
+
     received = False
     created = False
 
@@ -162,7 +169,7 @@ async def process_prescription(
             status_code=400,
             detail="Could not create prescription",
         )
-    
+
     # getting availableMedicines using GPIO
     for medicine in available_medicines:
         received = get_medicine(medicine["position"], medicine["quantity"])
@@ -173,8 +180,6 @@ async def process_prescription(
             detail="Could not get medicines",
         )
 
-    
-
     await update_medicines(db, available_medicines)
 
     await update_prescription(db, prescription_id)
@@ -184,6 +189,7 @@ async def process_prescription(
 
 @app.post("/order-medicines")
 async def order_medicines(medicines: list[PrescriptionMedicineModel]):
+
     medicines = jsonable_encoder(medicines)
 
     received = False
@@ -204,18 +210,15 @@ async def order_medicines(medicines: list[PrescriptionMedicineModel]):
 
 @app.post("/shelf-action/{action}")
 async def shelf(position: dict[str, int], action: str):
-    row, col = position.values()
 
-    print(f"row: {row}, col: {col}, action: {action}")
+    row, col = position.values()
 
     result = False
 
     if action == "open":
-        print("open")
-        result = open_shelf()
+        result = open_shelf(row, col)
     elif action == "close":
-        print("close")
-        result = close_shelf()
+        result = close_shelf(position, action)
     else:
         raise HTTPException(
             status_code=400,

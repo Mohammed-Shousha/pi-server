@@ -34,6 +34,9 @@ class MedicineModel(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 
 class PrescriptionMedicineModel(BaseModel):
     medicineId: str = Field(...)
@@ -42,6 +45,12 @@ class PrescriptionMedicineModel(BaseModel):
     price: float = Field(...)
     position: Optional[dict[str, int]]
     doctorInstructions: Optional[str]
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
 
 
 class PrescriptionModel(BaseModel):

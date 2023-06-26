@@ -1,13 +1,8 @@
 from gpiozero import OutputDevice
 
-relay = OutputDevice(14, active_high=False, initial_value=False)
+shelf_1_relay = OutputDevice(5, active_high=False, initial_value=False)
+shelf_2_relay = OutputDevice(6, active_high=False, initial_value=False)
+shelf_3_relay = OutputDevice(13, active_high=False, initial_value=False)
 
-def open_shelf():
-    print("on")
-    relay.on()
-    return True
 
-def close_shelf():
-    print("off")
-    relay.off()
-    return True
+shelves = [shelf_1_relay, shelf_2_relay, shelf_3_relay]
